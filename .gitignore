@@ -2,3 +2,4 @@ gratitude.db
 __pycache__/
 *.pyc
 .env
+.DS_Store
