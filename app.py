@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from datetime import datetime
-import sqlite3
+import psycopg2
 import uuid
 import os
 
@@ -8,12 +8,17 @@ app = Flask(__name__)
 app.secret_key = "gratitude-app"
 
 
+def get_db():
+    conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
+    return conn
+
+
 def init_db():
-    conn = sqlite3.connect("gratitude.db")
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id TEXT NOT NULL,
             name TEXT NOT NULL,
             date TEXT NOT NULL,
@@ -27,6 +32,7 @@ def init_db():
         )
     """)
     conn.commit()
+    cursor.close()
     conn.close()
 
 init_db()
@@ -35,10 +41,11 @@ init_db()
 def entry_exists_today():
     today = datetime.now().strftime("%d %b %Y")
     user_id = session.get("user_id")
-    conn = sqlite3.connect("gratitude.db")
+    conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name FROM entries WHERE date = ? AND user_id = ?", (today, user_id))
+    cursor.execute("SELECT id, name FROM entries WHERE date = %s AND user_id = %s", (today, user_id))
     entry = cursor.fetchone()
+    cursor.close()
     conn.close()
     if entry is None:
         return False, None
@@ -51,10 +58,11 @@ def index():
         session["user_id"] = str(uuid.uuid4())
 
     user_id = session.get("user_id")
-    conn = sqlite3.connect("gratitude.db")
+    conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM entries WHERE user_id = ? ORDER BY id DESC", (user_id,))
+    cursor.execute("SELECT * FROM entries WHERE user_id = %s ORDER BY id DESC", (user_id,))
     rows = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     entries = []
@@ -104,17 +112,18 @@ def add_entry():
 
     if all(grateful) and all(prayers):
         session["name"] = name
-        conn = sqlite3.connect("gratitude.db")
+        conn = get_db()
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO entries 
             (user_id, name, date, grateful_1, grateful_2, grateful_3, prayer_1, prayer_2, prayer_3, score)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (user_id, name, datetime.now().strftime("%d %b %Y"),
               grateful[0], grateful[1], grateful[2],
               prayers[0], prayers[1], prayers[2],
               score))
         conn.commit()
+        cursor.close()
         conn.close()
 
     return redirect(url_for("index"))
@@ -122,10 +131,11 @@ def add_entry():
 
 @app.route("/delete/<int:entry_id>", methods=["POST"])
 def delete_entry(entry_id):
-    conn = sqlite3.connect("gratitude.db")
+    conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM entries WHERE id = ?", (entry_id,))
+    cursor.execute("DELETE FROM entries WHERE id = %s", (entry_id,))
     conn.commit()
+    cursor.close()
     conn.close()
     return redirect(url_for("index"))
 
@@ -133,10 +143,11 @@ def delete_entry(entry_id):
 @app.route("/api/entries")
 def api_entries():
     user_id = session.get("user_id")
-    conn = sqlite3.connect("gratitude.db")
+    conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM entries WHERE user_id = ? ORDER BY id ASC", (user_id,))
+    cursor.execute("SELECT * FROM entries WHERE user_id = %s ORDER BY id ASC", (user_id,))
     rows = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     entries = []
