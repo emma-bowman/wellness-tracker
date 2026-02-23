@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from datetime import datetime
 import sqlite3
+import uuid
 import os
 
 app = Flask(__name__)
+app.secret_key = "gratitude-app"
+
 
 def init_db():
     conn = sqlite3.connect("gratitude.db")
@@ -11,6 +14,7 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
             name TEXT NOT NULL,
             date TEXT NOT NULL,
             grateful_1 TEXT NOT NULL,
@@ -27,22 +31,29 @@ def init_db():
 
 init_db()
 
+
 def entry_exists_today():
     today = datetime.now().strftime("%d %b %Y")
+    user_id = session.get("user_id")
     conn = sqlite3.connect("gratitude.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name FROM entries WHERE date = ?", (today,))
+    cursor.execute("SELECT id, name FROM entries WHERE date = ? AND user_id = ?", (today, user_id))
     entry = cursor.fetchone()
     conn.close()
     if entry is None:
         return False, None
     return True, entry[1]
 
+
 @app.route("/")
 def index():
+    if "user_id" not in session:
+        session["user_id"] = str(uuid.uuid4())
+
+    user_id = session.get("user_id")
     conn = sqlite3.connect("gratitude.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM entries ORDER BY id DESC")
+    cursor.execute("SELECT * FROM entries WHERE user_id = ? ORDER BY id DESC", (user_id,))
     rows = cursor.fetchall()
     conn.close()
 
@@ -50,18 +61,25 @@ def index():
     for row in rows:
         entries.append({
             "id": row[0],
-            "name": row[1],
-            "date": row[2],
-            "grateful": [row[3], row[4], row[5]],
-            "prayers": [row[6], row[7], row[8]],
-            "score": row[9]
+            "user_id": row[1],
+            "name": row[2],
+            "date": row[3],
+            "grateful": [row[4], row[5], row[6]],
+            "prayers": [row[7], row[8], row[9]],
+            "score": row[10]
         })
 
     already_entered, name = entry_exists_today()
     return render_template("index.html", entries=entries, already_entered=already_entered, name=name)
 
+
 @app.route("/add", methods=["POST"])
 def add_entry():
+    if "user_id" not in session:
+        session["user_id"] = str(uuid.uuid4())
+
+    user_id = session.get("user_id")
+
     name = request.form.get("name", "").strip()[:50]
     if not name:
         return redirect(url_for("index"))
@@ -85,20 +103,22 @@ def add_entry():
         score = 5
 
     if all(grateful) and all(prayers):
+        session["name"] = name
         conn = sqlite3.connect("gratitude.db")
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO entries 
-            (name, date, grateful_1, grateful_2, grateful_3, prayer_1, prayer_2, prayer_3, score)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, datetime.now().strftime("%d %b %Y"), 
+            (user_id, name, date, grateful_1, grateful_2, grateful_3, prayer_1, prayer_2, prayer_3, score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, name, datetime.now().strftime("%d %b %Y"),
               grateful[0], grateful[1], grateful[2],
-              prayers[0], prayers[1], prayers[2], 
+              prayers[0], prayers[1], prayers[2],
               score))
         conn.commit()
         conn.close()
 
     return redirect(url_for("index"))
+
 
 @app.route("/delete/<int:entry_id>", methods=["POST"])
 def delete_entry(entry_id):
@@ -109,11 +129,13 @@ def delete_entry(entry_id):
     conn.close()
     return redirect(url_for("index"))
 
+
 @app.route("/api/entries")
 def api_entries():
+    user_id = session.get("user_id")
     conn = sqlite3.connect("gratitude.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM entries ORDER BY id ASC")
+    cursor.execute("SELECT * FROM entries WHERE user_id = ? ORDER BY id ASC", (user_id,))
     rows = cursor.fetchall()
     conn.close()
 
@@ -121,14 +143,16 @@ def api_entries():
     for row in rows:
         entries.append({
             "id": row[0],
-            "name": row[1],
-            "date": row[2],
-            "grateful": [row[3], row[4], row[5]],
-            "prayers": [row[6], row[7], row[8]],
-            "score": row[9]
+            "user_id": row[1],
+            "name": row[2],
+            "date": row[3],
+            "grateful": [row[4], row[5], row[6]],
+            "prayers": [row[7], row[8], row[9]],
+            "score": row[10]
         })
 
     return jsonify(entries)
+
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
