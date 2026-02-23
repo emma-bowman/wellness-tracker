@@ -14,8 +14,9 @@ function loadChart() {
         })
         .then(function(entries) {
             const labels = entries.map(function(entry) {
-                return entry.date
-            })
+    const date = new Date(entry.date)
+    return date.getDate()
+})
 
             const scores = entries.map(function(entry) {
                 return entry.score
