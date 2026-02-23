@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="login-container">
+    <h1>Gratitude</h1>
+    <p>Your daily moment of reflection.</p>
+
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <div class="login-box">
+        <input type="text" id="username" placeholder="Username" maxlength="50">
+        <input type="password" id="pin" placeholder="4 digit PIN" maxlength="4">
+
+        <div class="login-buttons">
+            <form method="POST">
+                <input type="hidden" name="username" id="username-register">
+                <input type="hidden" name="pin" id="pin-register">
+                <input type="hidden" name="action" value="register">
+                <button type="submit" onclick="copyFields('register')" class="secondary">Register</button>
+            </form>
+            <form method="POST">
+                <input type="hidden" name="username" id="username-login">
+                <input type="hidden" name="pin" id="pin-login">
+                <input type="hidden" name="action" value="login">
+                <button type="submit" onclick="copyFields('login')">Sign in →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyFields(action) {
+    document.getElementById('username-' + action).value = document.getElementById('username').value
+    document.getElementById('pin-' + action).value = document.getElementById('pin').value
+}
+</script>
+
+{% endblock %}

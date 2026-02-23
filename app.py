@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-from datetime import datetime
+from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
 import uuid
 import os
 
 app = Flask(__name__)
 app.secret_key = "gratitude-app"
+app.permanent_session_lifetime = timedelta(days=365)
 
 
 def get_db():
@@ -17,9 +19,16 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            pin TEXT NOT NULL
+        )
+    """)
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS entries (
             id SERIAL PRIMARY KEY,
-            user_id TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
             name TEXT NOT NULL,
             date TEXT NOT NULL,
             grateful_1 TEXT NOT NULL,
@@ -52,11 +61,76 @@ def entry_exists_today():
     return True, entry[1]
 
 
-@app.route("/")
-def index():
-    if "user_id" not in session:
-        session["user_id"] = str(uuid.uuid4())
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip().lower()
+        pin = request.form.get("pin", "").strip()
+        action = request.form.get("action")
+
+        if action == "register":
+            if len(pin) != 4 or not pin.isdigit():
+                error = "PIN must be exactly 4 digits."
+            else:
+                conn = get_db()
+                cursor = conn.cursor()
+                try:
+                    hashed_pin = generate_password_hash(pin)
+                    cursor.execute(
+                        "INSERT INTO users (username, pin) VALUES (%s, %s) RETURNING id",
+                        (username, hashed_pin)
+                    )
+                    user_id = cursor.fetchone()[0]
+                    conn.commit()
+                    session.permanent = True
+                    session["user_id"] = user_id
+                    session["username"] = username
+                    return redirect(url_for("index"))
+                except psycopg2.errors.UniqueViolation:
+                    conn.rollback()
+                    error = "That username is already taken."
+                finally:
+                    cursor.close()
+                    conn.close()
+
+        elif action == "login":
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, pin FROM users WHERE username = %s", (username,))
+            user = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if user and check_password_hash(user[1], pin):
+                session.permanent = True
+                session["user_id"] = user[0]
+                session["username"] = username
+                return redirect(url_for("index"))
+            else:
+                error = "Invalid username or PIN."
+
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/")
+@login_required
+def index():
     user_id = session.get("user_id")
     conn = get_db()
     cursor = conn.cursor()
@@ -78,14 +152,13 @@ def index():
         })
 
     already_entered, name = entry_exists_today()
-    return render_template("index.html", entries=entries, already_entered=already_entered, name=name)
+    username = session.get("username")
+    return render_template("index.html", entries=entries, already_entered=already_entered, name=name, username=username)
 
 
 @app.route("/add", methods=["POST"])
+@login_required
 def add_entry():
-    if "user_id" not in session:
-        session["user_id"] = str(uuid.uuid4())
-
     user_id = session.get("user_id")
 
     name = request.form.get("name", "").strip()[:50]
@@ -111,7 +184,6 @@ def add_entry():
         score = 5
 
     if all(grateful) and all(prayers):
-        session["name"] = name
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("""
@@ -130,6 +202,7 @@ def add_entry():
 
 
 @app.route("/delete/<int:entry_id>", methods=["POST"])
+@login_required
 def delete_entry(entry_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -141,6 +214,7 @@ def delete_entry(entry_id):
 
 
 @app.route("/api/entries")
+@login_required
 def api_entries():
     user_id = session.get("user_id")
     conn = get_db()
