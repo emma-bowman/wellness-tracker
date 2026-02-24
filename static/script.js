@@ -124,7 +124,12 @@ function toggleHistory() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('main-form')
     if (form) {
-        nextStep(1)
+        const hasName = form.querySelector('input[name="name"][type="hidden"]')
+        if (hasName) {
+            nextStep(2)
+        } else {
+            nextStep(1)
+        }
         form.addEventListener('submit', function(e) {
             e.preventDefault()
             nextStep(5)
@@ -144,13 +149,3 @@ document.addEventListener('DOMContentLoaded', function() {
         loadChart()
     }
 })
-
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('main-form')
-    if (form) {
-        const hasName = form.querySelector('input[name="name"][type="hidden"]')
-        if (hasName) {
-            nextStep(2)
-        } else {
-            nextStep(1)
-        }
