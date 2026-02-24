@@ -67,7 +67,12 @@ def login_required(f):
     from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
+        try:
+            if "user_id" not in session:
+                return redirect(url_for("login"))
+            int(session.get("user_id"))
+        except (ValueError, TypeError):
+            session.clear()
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated_function
