@@ -14,6 +14,7 @@ function switchView(view, btn) {
     btn.classList.add('active-toggle')
     if (window.myChartInstance) {
         window.myChartInstance.destroy()
+        window.myChartInstance = null
     }
     loadChart(view)
 }
@@ -37,17 +38,19 @@ function loadChart(view = '30days') {
 
             const labels = entries.map(function(entry) {
                 const date = new Date(entry.date)
-                return date.getDate()
+                return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
             })
 
             const scores = entries.map(function(entry) {
                 return entry.score
             })
 
-            const now = new Date()
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-
             const ctx = document.getElementById('myChart').getContext('2d')
+
+            if (window.myChartInstance) {
+                window.myChartInstance.destroy()
+                window.myChartInstance = null
+            }
 
             window.myChartInstance = new Chart(ctx, {
                 type: 'line',
@@ -82,14 +85,11 @@ function loadChart(view = '30days') {
                             }
                         },
                         x: {
-                            type: 'linear',
-                            min: labels[0] || 1,
-                            max: lastDay,
                             grid: {
                                 display: false
                             },
                             ticks: {
-                                stepSize: 1
+                                maxTicksLimit: 10
                             }
                         }
                     },
@@ -123,7 +123,6 @@ function loadChart(view = '30days') {
             })
 
             document.getElementById('chart-container').classList.add('loaded')
-
         })
 }
 
@@ -149,7 +148,18 @@ function toggleHistory() {
                     })
                     html += '<div class="history-card">'
                     html += '<p class="history-date">' + formatted + '</p>'
-                    html += '<p class="history-text">Today I\'m grateful for <em>' + entry.grateful[0] + '</em>, <em>' + entry.grateful[1] + '</em> and <em>' + entry.grateful[2] + '</em>, and I\'m praying about <em>' + entry.prayers[0] + '</em>, <em>' + entry.prayers[1] + '</em> and <em>' + entry.prayers[2] + '</em>.</p>'
+                    html += '<p class="history-text">Today I\'m grateful for</p>'
+                    html += '<ul class="history-list">'
+                    html += '<li>' + entry.grateful[0] + '</li>'
+                    html += '<li>' + entry.grateful[1] + '</li>'
+                    html += '<li>' + entry.grateful[2] + '</li>'
+                    html += '</ul>'
+                    html += '<p class="history-text">I\'m praying about</p>'
+                    html += '<ul class="history-list">'
+                    html += '<li>' + entry.prayers[0] + '</li>'
+                    html += '<li>' + entry.prayers[1] + '</li>'
+                    html += '<li>' + entry.prayers[2] + '</li>'
+                    html += '</ul>'
                     html += '<p class="history-score">Score: ' + entry.score + '/10</p>'
                     html += '</div>'
                 })
