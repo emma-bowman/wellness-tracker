@@ -2,7 +2,7 @@
 
 A full-stack wellness app for daily gratitude journaling and mood tracking. Built with Flask, PostgreSQL, and vanilla JavaScript.
 
-**Live app:** [your-railway-url.up.railway.app](https://your-railway-url.up.railway.app)
+**Live app:** [https://web-production-61a76.up.railway.app/](https://web-production-61a76.up.railway.app/)
 
 ---
 
@@ -11,6 +11,7 @@ A full-stack wellness app for daily gratitude journaling and mood tracking. Buil
 Gratitude is a personal daily reflection tool. Each day, users record three things they're grateful for, three things they're praying or hoping for, and a life score out of 10. The app tracks this over time and visualises progress as a line graph.
 
 Key features:
+
 - Multi-step guided form with smooth transitions
 - Line graph showing mood score over time (last 30 days or all time view)
 - Hover tooltips showing full journal entries on the graph
@@ -24,6 +25,7 @@ Key features:
 ## Tech stack
 
 **Backend**
+
 - Python / Flask — web framework and routing
 - PostgreSQL — persistent database hosted on Railway
 - psycopg2 — Python PostgreSQL adapter
@@ -31,6 +33,7 @@ Key features:
 - gunicorn — production web server
 
 **Frontend**
+
 - Jinja2 — HTML templating
 - Vanilla JavaScript — form navigation, AJAX submissions, chart rendering
 - Chart.js — line graph visualisation
@@ -38,6 +41,7 @@ Key features:
 - Google Fonts — Cormorant Garamond and Jost
 
 **Hosting**
+
 - Railway — app and database hosting
 - GitHub — version control and CI/CD (auto-deploys on push)
 
@@ -66,9 +70,11 @@ wellness-tracker/
 ## How it works
 
 ### Authentication
+
 Users register with a username and 4-digit PIN. The PIN is hashed using `werkzeug.security` before being stored — plain text PINs are never saved. Sessions persist for 365 days so users stay logged in across devices and browsers.
 
 ### Database
+
 Two tables:
 
 `users` — stores username and hashed PIN
@@ -77,9 +83,11 @@ Two tables:
 All queries are parameterised to prevent SQL injection.
 
 ### Form flow
+
 The multi-step form uses JavaScript to show and hide steps without page reloads. On submission, the form data is sent via `fetch()` (AJAX) to the `/add` route, avoiding a full page reload. A 2.5 second animation plays before the graph is revealed.
 
 ### Graph
+
 Chart.js renders a line graph of the user's life scores over time. A custom external tooltip shows the full journal entry for each data point on hover. Users can toggle between the last 30 days and all-time views.
 
 ---
@@ -87,18 +95,21 @@ Chart.js renders a line graph of the user's life scores over time. A custom exte
 ## Running locally
 
 **1. Clone the repo**
+
 ```bash
 git clone https://github.com/manbows/wellness-tracker.git
 cd wellness-tracker
 ```
 
 **2. Create a virtual environment**
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
 **3. Install dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -106,11 +117,13 @@ pip install -r requirements.txt
 **4. Set up environment variables**
 
 Create a `.env` file in the project root:
+
 ```
 DATABASE_URL=your-postgresql-connection-string
 ```
 
 **5. Run the app**
+
 ```bash
 python app.py
 ```
