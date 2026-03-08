@@ -334,6 +334,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
     right: 100px;
 }
 
+.nav-link.today {
+    right: 150px;
+}
+
 
 
 #custom-tooltip {
