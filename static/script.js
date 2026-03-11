@@ -139,7 +139,9 @@ function loadChart(view = '30days') {
                 }
             })
 
-            document.getElementById('chart-container').classList.add('loaded')
+            const container = document.getElementById('chart-container')
+            container.classList.add('loaded')
+            container.style.opacity = '1'
         })
 }
 
@@ -200,6 +202,9 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault()
             nextStep(5)
+            // Hide chart container so it can fade in after submission
+            const chartContainer = document.getElementById('chart-container')
+            if (chartContainer) chartContainer.style.opacity = '0'
             setTimeout(function() {
                 const formData = new FormData(form)
                 fetch('/add', {
