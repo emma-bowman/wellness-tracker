@@ -298,7 +298,7 @@ def backdate():
     return render_template("backdate.html", error=error, success=success, username=username)
 
 
-
+@app.route("/api/entries")
 @login_required
 def api_entries():
     user_id = int(session.get("user_id"))
@@ -326,5 +326,3 @@ def api_entries():
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
-
