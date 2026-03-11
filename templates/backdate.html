@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="step active">
+    <h2>Add a missing entry</h2>
+    <p>Fill in a day you didn't get to.</p>
+
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success-message">{{ success }}</div>
+    {% endif %}
+
+    <form method="POST" style="width: 100%;">
+        <label class="field-label">Date</label>
+        <input type="date" name="date" required max="{{ today }}" />
+
+        <label class="field-label">Grateful for</label>
+        <input type="text" name="grateful_1" placeholder="First thing..." maxlength="150" required />
+        <input type="text" name="grateful_2" placeholder="Second thing..." maxlength="150" required />
+        <input type="text" name="grateful_3" placeholder="Third thing..." maxlength="150" required />
+
+        <label class="field-label">Praying for</label>
+        <input type="text" name="prayer_1" placeholder="First thing..." maxlength="150" required />
+        <input type="text" name="prayer_2" placeholder="Second thing..." maxlength="150" required />
+        <input type="text" name="prayer_3" placeholder="Third thing..." maxlength="150" required />
+
+        <label class="field-label">Loving life score</label>
+        <div id="score-display">5</div>
+        <input
+            type="range"
+            name="score"
+            id="score"
+            min="0"
+            max="10"
+            value="5"
+            oninput="document.getElementById('score-display').textContent = this.value"
+        />
+        <div id="score-labels">
+            <span>0</span>
+            <span>10</span>
+        </div>
+
+        <button type="submit">Save entry →</button>
+    </form>
+
+    <a href="/?view=journey" class="backdate-link">← Back to my journey</a>
+</div>
+
+<a href="/logout" class="nav-link logout">Sign out</a>
+
+<script>
+    // Set max date to yesterday
+    const dateInput = document.querySelector('input[type="date"]')
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    dateInput.max = yesterday.toISOString().split('T')[0]
+</script>
+{% endblock %}

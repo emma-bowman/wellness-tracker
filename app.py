@@ -231,7 +231,75 @@ def delete_entry(entry_id):
     return redirect(url_for("index"))
 
 
-@app.route("/api/entries")
+@app.route("/backdate", methods=["GET", "POST"])
+@login_required
+def backdate():
+    user_id = int(session.get("user_id"))
+    username = session.get("username")
+    error = None
+    success = None
+
+    if request.method == "POST":
+        date_str = request.form.get("date", "").strip()
+        name = request.form.get("name", "").strip()[:50] or username
+
+        grateful = [
+            request.form.get("grateful_1", "").strip()[:150],
+            request.form.get("grateful_2", "").strip()[:150],
+            request.form.get("grateful_3", "").strip()[:150],
+        ]
+        prayers = [
+            request.form.get("prayer_1", "").strip()[:150],
+            request.form.get("prayer_2", "").strip()[:150],
+            request.form.get("prayer_3", "").strip()[:150],
+        ]
+
+        try:
+            score = int(request.form.get("score", 5))
+            score = max(0, min(10, score))
+        except ValueError:
+            score = 5
+
+        try:
+            parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+            if parsed_date.date() >= datetime.now().date():
+                error = "Please choose a date in the past."
+            elif not all(grateful) or not all(prayers):
+                error = "Please fill in all fields."
+            else:
+                formatted_date = parsed_date.strftime("%d %b %Y")
+                conn = get_db()
+                cursor = conn.cursor()
+                # Check if entry already exists for that date
+                cursor.execute(
+                    "SELECT id FROM entries WHERE date = %s AND user_id = %s",
+                    (formatted_date, user_id)
+                )
+                existing = cursor.fetchone()
+                if existing:
+                    error = f"You already have an entry for {formatted_date}."
+                    cursor.close()
+                    conn.close()
+                else:
+                    cursor.execute("""
+                        INSERT INTO entries
+                        (user_id, name, date, grateful_1, grateful_2, grateful_3, prayer_1, prayer_2, prayer_3, score)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (user_id, name, formatted_date,
+                          grateful[0], grateful[1], grateful[2],
+                          prayers[0], prayers[1], prayers[2],
+                          score))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    success = f"Entry added for {formatted_date}."
+        except ValueError:
+            error = "Invalid date format."
+
+    return render_template("backdate.html", error=error, success=success, username=username)
+
+
+
 @login_required
 def api_entries():
     user_id = int(session.get("user_id"))

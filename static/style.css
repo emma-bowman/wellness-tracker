@@ -385,3 +385,56 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .tt-item {
     color: rgba(253, 251, 247, 0.85);
 }
+
+.backdate-link {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.backdate-link:hover {
+    color: var(--terracotta);
+}
+
+.field-label {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    margin-top: 20px;
+}
+
+input[type="date"] {
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--muted);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: 'Jost', sans-serif;
+    font-size: 1rem;
+    color: var(--warm-brown);
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+input[type="date"]:focus {
+    border-color: var(--terracotta);
+}
+
+.success-message {
+    color: #6a8f6a;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
