@@ -2,7 +2,7 @@
 
 A full-stack wellness app for daily gratitude journaling and mood tracking. Built with Flask, PostgreSQL, and vanilla JavaScript.
 
-**Live app:** [https://web-production-61a76.up.railway.app/](https://web-production-61a76.up.railway.app/)
+**Live app:** [https://wellness-tracker-25qrzhro8-emma-bowmans-projects.vercel.app/](https://wellness-tracker-25qrzhro8-emma-bowmans-projects.vercel.app/)
 
 ---
 
@@ -39,7 +39,7 @@ Key features:
 **Backend**
 
 - Python / Flask — web framework and routing
-- PostgreSQL — persistent database hosted on Railway
+- PostgreSQL — persistent database hosted on Supabase
 - psycopg2 — Python PostgreSQL adapter
 - werkzeug — PIN hashing and security
 - gunicorn — production web server
@@ -49,13 +49,14 @@ Key features:
 - Jinja2 — HTML templating
 - Vanilla JavaScript — form navigation, AJAX submissions, chart rendering
 - Chart.js — line graph visualisation
-- CSS custom properties — design system with golden hour colour palette
+- CSS custom properties — design system with warm cream colour palette
 - Google Fonts — Cormorant Garamond and Jost
 
 **Hosting**
 
-- Railway — app and database hosting
-- GitHub — version control and CI/CD (auto-deploys on push)
+- Vercel — app hosting with automatic deploys on push
+- Supabase — managed PostgreSQL database
+- GitHub — version control and CI/CD
 
 ---
 
@@ -64,7 +65,7 @@ Key features:
 ```
 wellness-tracker/
 ├── app.py                  # Flask backend — routes, database, auth
-├── Procfile                # Railway deployment config
+├── vercel.json             # Vercel deployment config
 ├── requirements.txt        # Python dependencies
 ├── .env                    # Local environment variables (not committed)
 ├── .gitignore
@@ -74,7 +75,7 @@ wellness-tracker/
 │   ├── login.html          # Login and registration page
 │   └── backdate.html       # Add a missing past entry
 └── static/
-    ├── style.css           # Golden hour aesthetic styling
+    ├── style.css           # Warm cream aesthetic styling
     └── script.js           # Form navigation, chart, history
 ```
 
@@ -114,7 +115,7 @@ Users can add entries for days they missed via the `/backdate` route. The form p
 **1. Clone the repo**
 
 ```bash
-git clone https://github.com/manbows/wellness-tracker.git
+git clone https://github.com/emma-bowman/wellness-tracker.git
 cd wellness-tracker
 ```
 
@@ -136,7 +137,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```
-DATABASE_URL=your-postgresql-connection-string
+DATABASE_URL=your-supabase-postgresql-connection-string
 SECRET_KEY=your-secret-key
 ```
 
@@ -152,9 +153,11 @@ Visit `http://127.0.0.1:5000`
 
 ## Deployment
 
-The app is deployed on Railway with a PostgreSQL plugin. Every push to the `main` branch on GitHub triggers an automatic redeploy.
+The app is deployed on Vercel with a Supabase PostgreSQL database. Every push to the `main` branch on GitHub triggers an automatic redeploy via Vercel's GitHub integration.
 
-Environment variables (`DATABASE_URL` and `SECRET_KEY`) are set in the Railway dashboard under the service's Variables tab.
+Environment variables (`DATABASE_URL` and `SECRET_KEY`) are set in the Vercel dashboard under the project's Settings → Environment Variables tab.
+
+The database uses Supabase's transaction pooler connection (port 6543) for compatibility with Vercel's serverless functions.
 
 ---
 
@@ -166,7 +169,8 @@ This project was built as part of a Python and Web Development Skills Bootcamp. 
 - Designing and querying a relational database with SQL
 - Implementing user authentication with hashed credentials and secure session management
 - Using AJAX and the Fetch API to avoid page reloads
-- Deploying a production app with a persistent cloud database
+- Deploying a production app with Vercel and a managed cloud database (Supabase)
+- Migrating a live database from Railway to Supabase using pg_dump and pg_restore
 - Managing environment variables and keeping secrets out of version control
 - Git version control and GitHub workflow
 - Securing routes against unauthorised data access (ownership checks on delete)
