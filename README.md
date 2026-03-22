@@ -2,7 +2,7 @@
 
 A full-stack wellness app for daily gratitude journaling and mood tracking. Built with Flask, PostgreSQL, and vanilla JavaScript.
 
-**Live app:** [https://wellness-tracker-25qrzhro8-emma-bowmans-projects.vercel.app/](https://wellness-tracker-25qrzhro8-emma-bowmans-projects.vercel.app/)
+**Live app:** [https://wellness-tracker-tau-liard.vercel.app/](https://wellness-tracker-tau-liard.vercel.app/)
 
 ---
 
